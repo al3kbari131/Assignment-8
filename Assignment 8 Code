@@ -1,0 +1,252 @@
+#include<iostream>
+#include<list>
+#include <bits/stdc++.h>
+
+using namespace std;
+
+class Graph
+{
+      int totalVertex;
+      int **graphMatrix;
+      list<char> vertexValues;
+public:
+      
+      Graph()
+      {
+            totalVertex = 0;
+      }
+      
+      void resizeArray()
+      {
+            graphMatrix = new int *[totalVertex];
+            for (int i = 0; i <= totalVertex;i++)
+            {
+                  graphMatrix[i] = new int[totalVertex];
+            }
+            for (int i=0; i < totalVertex;i++)
+            {
+                  for (int k=0; k < totalVertex;k++)
+                  {
+                       graphMatrix[i][k] = 0;
+                  }
+            }
+      
+      }
+      
+      int getIndex(char value)
+      {
+            int temp = 0;
+            for (char x : vertexValues)
+            {
+                  if(x==value)
+                        return temp;
+                  temp++;
+            }
+            return -1;
+      }
+
+      void printMatrix()
+      {
+            cout <<endl<< "Adjacent Matrix:" << endl<<endl<<"- |  ";
+            list<char>::iterator it;
+            it = vertexValues.begin();
+  
+            for(char x:vertexValues)
+                  cout<< x<<"  ";
+            cout << endl;
+
+            for (int i = 0; i < vertexValues.size();i++)
+                  cout << "----";
+
+            cout << endl;
+            for (int i = 0; i < totalVertex; i++)
+            {
+                  cout << *it << " |";
+                  for (int k = 0; k < totalVertex; k++)
+                        cout << "  " << graphMatrix[i][k];
+                  cout << endl;
+                  it++;
+                  }
+      }
+             
+      void add_vertex(char vertex)
+      {
+            vertexValues.push_back(vertex);
+            totalVertex++;
+            resizeArray();
+      }
+      
+      void add_edge(char source, char destination, int weight)
+      {
+            int isExist = 0;
+            for (char x : vertexValues)
+            {
+                  if(source==x || destination==x)
+                  {
+                        isExist++;
+                  }
+              }
+
+              if(isExist==2)
+              {
+                    int src=getIndex(source);
+                    int des = getIndex(destination);
+                    graphMatrix[src][des] = weight;
+                    graphMatrix[des][src] = weight;
+              }
+              else
+                    cout << "Can not add edge. Vertex is missing" << endl;
+      }
+      
+      int minDistance(int dist[], bool sptSet[])
+      {
+            // Initialize min value
+            int min = INT_MAX, min_index;
+            for (int v = 0; v < totalVertex; v++)
+            if (sptSet[v] == false &&dist[v] <= min)
+                  min = dist[v], min_index = v;
+            return min_index;
+      }
+
+      
+      void print_shortest_path(int par[], int jk)
+      {        
+            if (par[jk] == - 1)
+                  return;
+            print_shortest_path(par, par[jk]);
+            cout << "->" << getValue(jk);
+      }
+
+      void shortest_path(char source,char destination)
+      {
+            int src = getIndex(source);
+            int dest = getIndex(destination);
+
+            int dist[totalVertex];
+            bool sp[totalVertex];
+            int par[totalVertex];
+            for (int i = 0; i < totalVertex; i++)
+            {
+                  par[0] = -1;
+                  dist[i] = INT_MAX;
+                  sp[i] = false;
+            }
+            dist[src] = 0;
+            for (int count = 0; count < totalVertex - 1; count++)
+            {
+                  int u = minDistance(dist, sp);  
+                  sp[u] = true;
+                  for (int v = 0; v < totalVertex; v++)
+                        if (!sp[v] && graphMatrix[u][v] && dist[u] + graphMatrix[u][v] < dist[v])
+                        {
+                              par[v] = u;
+                              dist[v] = dist[u] + graphMatrix[u][v];
+                        } 
+            }
+            cout << "Shortest distance from "<< source << " to "<<destination<< ": " << dist[dest]<<endl;
+            cout << "Shortest Path: "<<source;
+            print_shortest_path(par, dest);
+            cout << endl;
+      }
+
+      int minimumKey(int k[], bool v[])  
+            { 
+                  int min = 999, min_index; 
+                  for (int i = 0; i < totalVertex; i++) 
+                        if (v[i] == false && k[i] < min) 
+                        { 
+                              min = k[i];
+                              min_index = i;  
+                        }
+                  return min_index;
+            }  
+      char getValue(int index)
+            {
+                  int i = 0;
+                  for (char c : vertexValues)
+                  {
+                        if(i==index)
+                              return c;
+                        i++;
+                  }
+                  return ' ';
+      }
+      void printMST(int par[])  
+      {
+            cout <<endl<< "Mininum Spanning Tree:" << endl;
+            int minCost = 0;
+            cout << "----------------" << endl;
+            cout<<" Edge \t| Weight"<<endl; 
+            cout << "----------------" << endl;
+
+            for (int i = 1; i< totalVertex; i++) 
+            {
+                  cout<<getValue(par[i])<<" - "<<getValue(i)<<" \t|   "<<graphMatrix[i][par[i]]<<endl;  
+                  minCost+=graphMatrix[i][par[i]];
+            }
+            cout << "----------------" << endl;
+            cout << "Total\t|   " << minCost << endl;
+            cout << "----------------" << endl;
+
+      }  
+       void min_span_tree()  
+      {  
+            int par[totalVertex], key[totalVertex];
+            bool visitDone[totalVertex];
+            for (int i = 0; i< totalVertex; i++) 
+            { 
+                  key[i] = 999; 
+                  visitDone[i] = false;
+                  par[i]=-1;
+            }    
+            
+            key[0] = 0;   
+            par[0] = -1;  
+
+            for (int x = 0; x < totalVertex - 1; x++) 
+            {
+                  int u = minimumKey(key, visitDone);  
+                  visitDone[u] = true;  
+                  for (int v = 0; v < totalVertex; v++)  
+                  {
+                        if (graphMatrix[u][v]!=0 && visitDone[v] == false && graphMatrix[u][v] < key[v])
+                        {  
+                              par[v] = u;
+                              key[v] = graphMatrix[u][v];  
+                        }        
+                  }
+            }
+            printMST(par);  
+      }  
+      
+};
+
+
+// main function
+int main()  
+{  
+      Graph g;
+      //add vertex
+      g.add_vertex('A');
+      g.add_vertex('B');
+      g.add_vertex('C');
+      g.add_vertex('D');
+      g.add_vertex('E');
+
+      //add edges with weight
+      g.add_edge('A', 'B', 2);
+      g.add_edge('A', 'D', 6);
+      g.add_edge('B', 'C', 3);
+      g.add_edge('B', 'D', 8);
+      g.add_edge('B', 'E', 5);
+      g.add_edge('C', 'E', 1);
+      g.add_edge('D', 'E', 9);
+
+      //print matrix
+      g.printMatrix();
+
+      g.min_span_tree();
+      //find MST
+      g.shortest_path('A','D');
+      return 0;
+}  
